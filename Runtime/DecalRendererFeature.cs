@@ -1,35 +1,31 @@
-﻿using UnityEngine.Rendering.Universal;
+﻿using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace kTools.Decals
 {
     sealed class DecalRendererFeature : ScriptableRendererFeature
     {
-#region Fields
-        static DecalRendererFeature s_Instance;
-        readonly DecalRenderPass m_RenderPass;
-#endregion
+#pragma warning disable CS0649
+        public RenderPassEvent RenderPassEvent;
+#pragma warning restore CS0649
+        private DecalRenderPass m_RenderPass;
 
-#region Constructors
-        public DecalRendererFeature()
-        {
-            s_Instance = this;
-            m_RenderPass = new DecalRenderPass();
-        }
-#endregion
-
-#region Initialization
         public override void Create()
         {
-            name = "Decals";
-        }
-#endregion
-        
-#region RenderPass
+            if(m_RenderPass != null)
+            {
+                return;
+            }
+
+            this.name = "Decals";
+            m_RenderPass = new DecalRenderPass(this.RenderPassEvent);            
+        } 
+
+        /// <inhertidoc />
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             // Enqueue passes
             renderer.EnqueuePass(m_RenderPass);
         }
-#endregion
     }
 }

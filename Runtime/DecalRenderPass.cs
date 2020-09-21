@@ -19,10 +19,10 @@ namespace kTools.Decals
 #endregion
 
 #region Constructors
-        public DecalRenderPass()
+        public DecalRenderPass(RenderPassEvent renderPassEvent)
         {
             // Set data
-            renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
+            this.renderPassEvent = renderPassEvent;
         }
 #endregion
 
@@ -149,7 +149,7 @@ namespace kTools.Decals
             }
             
             // Material
-            drawingSettings.overrideMaterial = decal.decalData.material;
+            drawingSettings.overrideMaterial = decal.RenderMaterial;
             drawingSettings.overrideMaterialPassIndex = 0;
             return drawingSettings;
         }

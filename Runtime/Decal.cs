@@ -8,28 +8,50 @@ namespace kTools.Decals
     [AddComponentMenu("kTools/Decal"), ExecuteInEditMode]
     public sealed class Decal : MonoBehaviour
     {
-#region Serialized Fields
+        /// <summary>
+        /// Material used to set property on a copied instance
+        /// </summary>
+        public Material Material
+        {
+            get
+            {
+                if (_overrideMaterial == null)
+                {
+                    _overrideMaterial = new Material(m_DecalData.material);
+                }
+
+                return _overrideMaterial;
+            }
+        }
+        private Material _overrideMaterial;
+
+        /// <summary>
+        /// Material used by render pass
+        /// </summary>
+        public Material RenderMaterial => _overrideMaterial ?? m_DecalData.material;
+
+        #region Serialized Fields
         [SerializeField]
         DecalData m_DecalData;
-#endregion
+        #endregion
 
-#region Fields
+        #region Fields
         const string kGizmoPath = "Packages/com.kink3d.decals/Gizmos/Decal.png";
         const float kDefaultScale = 0.5f;
 
         Matrix4x4 m_Matrix;
         Plane[] m_ClipPlanes;
         DecalData m_PreviousDecalData;
-#endregion
+        #endregion
 
-#region Constructors
+        #region Constructors
         public Decal()
         {
             m_ClipPlanes = new Plane[6];
         }
-#endregion
+        #endregion
 
-#region Properties
+        #region Properties
         /// <summary>Data object providing settings and inputs for this Decal.</summary>
         public DecalData decalData
         {
@@ -42,9 +64,9 @@ namespace kTools.Decals
 
         /// <summary>Clipping planes used for culling Decal.</summary>
         public Plane[] clipPlanes => m_ClipPlanes;
-#endregion
+        #endregion
 
-#region State
+        #region State
         void OnEnable()
         {
             // Registration
@@ -57,36 +79,41 @@ namespace kTools.Decals
             DecalSystem.UnregisterDecal(this);
         }
 
-        void Update()
+        void LateUpdate()
         {
-            if(decalData == null)
+            if (decalData == null)
                 return;
-            
+
             // Track when DecalData changes
             bool decalDataChanged = false;
-            if(decalData != m_PreviousDecalData)
+            if (decalData != m_PreviousDecalData)
             {
                 decalDataChanged = true;
                 m_PreviousDecalData = decalData;
             }
 
             // Update depth when DecalData.depth changes
-            if(decalData.depth != transform.localScale.z)
+            if (decalData.depth != transform.localScale.z)
             {
                 var localScale = transform.localScale;
                 transform.localScale = new Vector3(localScale.x, localScale.y, decalData.depth);
             }
 
             // Update projection when decalData or Transform changes
-            if(decalDataChanged || transform.hasChanged)
+            if (decalDataChanged || transform.hasChanged)
             {
+                if (transform.hasChanged)
+                {
+                    transform.hasChanged = false;
+                }
+
                 UpdateProjectionMatrix();
                 UpdateCullingPlanes();
             }
         }
-#endregion
+        #endregion
 
-#region Transform
+        #region Transform
         /// <summary>
         /// Set Transform data for Decal.
         /// </summary>
@@ -103,9 +130,9 @@ namespace kTools.Decals
             transform.LookAt(transform.position + direction.normalized);
             transform.localScale = new Vector3(scale.x, scale.y, depth);
         }
-#endregion
+        #endregion
 
-#region Projection
+        #region Projection
         void UpdateProjectionMatrix()
         {
             // Setup
@@ -114,7 +141,7 @@ namespace kTools.Decals
 
             // Get Matrix
             m_Matrix = Matrix4x4.Ortho(-kDefaultScale, kDefaultScale, -kDefaultScale, kDefaultScale, nearClip, farClip);
-            
+
             // Offset
             m_Matrix.m02 += 0.5f * m_Matrix.m32;
             m_Matrix.m03 += 0.5f * m_Matrix.m33;
@@ -140,14 +167,14 @@ namespace kTools.Decals
             vertices[2].x = vertices[3].x = vertices[6].x = vertices[7].x = kDefaultScale;
             vertices[0].y = vertices[2].y = vertices[4].y = vertices[6].y = kDefaultScale;
             vertices[1].y = vertices[3].y = vertices[5].y = vertices[7].y = -kDefaultScale;
-			vertices[0].z = vertices[1].z = vertices[2].z = vertices[3].z = transform.localScale.z;
-			vertices[7].z = vertices[4].z = vertices[6].z = vertices[5].z = 0.0f;
+            vertices[0].z = vertices[1].z = vertices[2].z = vertices[3].z = transform.localScale.z;
+            vertices[7].z = vertices[4].z = vertices[6].z = vertices[5].z = 0.0f;
 
             // Transform vertices to World Space
-			for (int i = 0; i < 8; i++)
-			{
-				vertices[i] = transform.TransformPoint(vertices[i]);
-			}
+            for (int i = 0; i < 8; i++)
+            {
+                vertices[i] = transform.TransformPoint(vertices[i]);
+            }
 
             // Create clip planes
             m_ClipPlanes[0] = new Plane(vertices[0], vertices[1], vertices[4]);
@@ -157,9 +184,9 @@ namespace kTools.Decals
             m_ClipPlanes[4] = new Plane(vertices[0], vertices[2], vertices[1]);
             m_ClipPlanes[5] = new Plane(vertices[4], vertices[5], vertices[6]);
         }
-#endregion
+        #endregion
 
-#region AssetMenu
+        #region AssetMenu
 #if UNITY_EDITOR
         // Add a menu item to Decals
         [UnityEditor.MenuItem("GameObject/kTools/Decal", false, 10)]
@@ -167,18 +194,18 @@ namespace kTools.Decals
         {
             // Create Decal
             GameObject go = new GameObject("New Decal", typeof(Decal));
-            
+
             // Transform
             UnityEditor.GameObjectUtility.SetParentAndAlign(go, menuCommand.context as GameObject);
-            
+
             // Undo and Selection
             UnityEditor.Undo.RegisterCreatedObjectUndo(go, "Create " + go.name);
             UnityEditor.Selection.activeObject = go;
         }
 #endif
-#endregion
+        #endregion
 
-#region Gizmos
+        #region Gizmos
 #if UNITY_EDITOR
         void OnDrawGizmos()
         {
@@ -195,6 +222,6 @@ namespace kTools.Decals
             Gizmos.DrawWireCube(Vector3.zero, bounds);
         }
 #endif
-#endregion
+        #endregion
     }
 }
