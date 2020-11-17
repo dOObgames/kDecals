@@ -131,7 +131,7 @@ half4 LitPassFragment(Varyings input) : SV_Target
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-    SurfaceData surfaceData;
+    SurfaceData2 surfaceData;
     InitializeStandardLitSurfaceData(input.positionPS, surfaceData);
 
     InputData inputData;

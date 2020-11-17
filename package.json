@@ -1,7 +1,7 @@
 {
     "name": "com.kink3d.decals",
     "description": "Projection Decals for Unity's Universal Render Pipeline.",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "unity": "2019.3",
     "displayName": "kDecals",
     "dependencies": {
